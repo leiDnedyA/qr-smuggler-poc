@@ -1,7 +1,7 @@
 import QRScanner from './qr-scanner.min.js';
 
-const MAX_QR_TEXT_LENGTH = 80;
-const DELAY_MS = 240;
+const MAX_QR_TEXT_LENGTH = 82;
+const DELAY_MS = 200;
 const qrCode = new QRCode(document.getElementById("qrcode"));
 
 const startButton = document.getElementById('start-button');
