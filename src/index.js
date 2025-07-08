@@ -1,4 +1,6 @@
-import QRScanner from './qr-scanner.min.js';
+import Video from './video.js';
+
+Video.init(console.log);
 
 const MAX_QR_TEXT_LENGTH = 82;
 const DELAY_MS = 200;
@@ -95,39 +97,3 @@ fileInput.addEventListener("change", async (event) => {
     }
   }
 });
-
-const videoElem = document.getElementById("camera-video");
-const qrScanner = new QRScanner(
-  videoElem,
-  result => {
-    try {
-      if (result.data.includes("noop")) {
-        console.log('good');
-        return;
-      } // test code
-
-      const data = JSON.parse(result.data);
-      console.log('decoded qr code:', data)
-      if (data.i === 0 && !readData.buffer) {
-        readData.buffer = new Array(data.len)
-        buffer.len = data.len;
-        buffer.i = data.i;
-      }
-      readData.buffer[data.i] = data.chunk;
-      console.log('loading full data')
-      let dataUrl = "";
-      for (let chunk of readData.buffer) {
-        dataUrl += chunk;
-      }
-      recvImage.src = dataUrl;
-      if (readData.buffer.every(element => !!element) || data.i === data.len - 1) {
-      }
-    } catch (e) {
-      console.error(e);
-      console.log(result)
-    }
-  },
-  { /* your options or returnDetailedScanResult: true if you're not specifying any other options */ },
-);
-
-qrScanner.start();
