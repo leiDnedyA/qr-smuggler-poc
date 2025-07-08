@@ -1,5 +1,4 @@
 import QRScanner from './qr-scanner.min.js';
-import JabcodeJSInterface from './jabcodeJSLib.min.js'
 
 const MAX_QR_TEXT_LENGTH = 82;
 const DELAY_MS = 200;
