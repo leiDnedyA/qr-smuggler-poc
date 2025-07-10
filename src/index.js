@@ -1,8 +1,8 @@
 import jabcode from './jabcode/jabcode.js'
 import video from './video.js';
 
-const MAX_BARCODE_TEXT_LENGTH = 300;
-const DELAY_MS = 200;
+const MAX_BARCODE_TEXT_LENGTH = 400;
+const DELAY_MS = 40;
 
 const startButton = document.getElementById('start-button');
 const recvImage = document.getElementById('recv-image');
@@ -10,24 +10,30 @@ const dataUrlElement = document.getElementById('data-url-text');
 
 const readBuffer = {
   buffer: null,
-  i: 0,
+  indicatorBuffer: null,
   len: -1
 }
 
 function loadData(data) {
+  console.log(data);
+  console.log(readBuffer)
   if (!readBuffer.buffer) {
     readBuffer.buffer = new Array(data.len)
-    buffer.len = data.len;
-    buffer.i = data.i;
+    readBuffer.indicatorBuffer = new Array(data.len);
+    for (let i = 0; i < data.len; i++) {
+      readBuffer.indicatorBuffer[i] = 0;
+    }
+    readBuffer.len = data.len;
   }
   readBuffer.buffer[data.i] = data.chunk;
-  console.log('loading full data')
-  let dataUrl = "";
-  for (let chunk of readBuffer.buffer) {
-    dataUrl += chunk;
-  }
-  recvImage.src = dataUrl;
-  if (readBuffer.buffer.every(element => !!element) || data.i === data.len - 1) {
+  readBuffer.indicatorBuffer[data.i] = 1;
+  if (readBuffer.indicatorBuffer.every(element => element === 1)) {
+    console.log('loading full data')
+    let dataUrl = "";
+    for (let chunk of readBuffer.buffer) {
+      dataUrl += chunk;
+    }
+    recvImage.src = dataUrl;
   }
 }
 
@@ -41,12 +47,12 @@ video.captureOnInterval(async (imageBlob) => {
   }
   try {
     const data = JSON.parse(content);
-    console.log(data);
     loadData(data);
   } catch (e) {
     console.error(e);
   }
-}, DELAY_MS);
+  URL.revokeObjectURL(imageBlob);
+}, 5);
 
 async function compressImage(file, quality = 0.7) {
   return new Promise((resolve) => {
@@ -118,7 +124,7 @@ fileInput.addEventListener("change", async (event) => {
   if (file && file.type.startsWith("image/")) {
     try {
       // const dataURL = await fileToBase64(compressedFile);
-      const dataURL = await compressImage(file, .1);
+      const dataURL = await compressImage(file, .4);
       recvImage.src = dataURL;
       dataUrlElement.value = dataURL;
       console.log(dataURL);
