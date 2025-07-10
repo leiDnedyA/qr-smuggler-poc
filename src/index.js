@@ -1,9 +1,8 @@
 import jabcode from './jabcode/jabcode.js'
 import video from './video.js';
 
-const MAX_BARCODE_TEXT_LENGTH = 400;
-const DELAY_MS = 8;
-const WEB_WORKER_COUNT = 8;
+const MAX_BARCODE_TEXT_LENGTH = 300;
+const WEB_WORKER_COUNT = 12;
 
 const sendButton = document.getElementById('send-button');
 const readButton = document.getElementById('read-button')
@@ -164,7 +163,7 @@ fileInput.addEventListener("change", async (event) => {
   if (file && file.type.startsWith("image/")) {
     try {
       // const dataURL = await fileToBase64(compressedFile);
-      const dataURL = await compressImage(file, .4);
+      const dataURL = await compressImage(file, .1);
       recvImage.src = dataURL;
       dataUrlElement.value = dataURL;
       console.log(dataURL);
