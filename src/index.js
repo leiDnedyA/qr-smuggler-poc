@@ -1,4 +1,4 @@
-import jabcode from './_jabcode/jabcode.js'
+import jabcode from './jabcode/jabcode.js'
 import video from './video.js';
 
 const MAX_BARCODE_TEXT_LENGTH = 300;
