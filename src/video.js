@@ -14,7 +14,6 @@ function dataURItoBlob(dataURI) {
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Media_Capture_and_Streams_API/Taking_still_photos
 const video = document.getElementById("camera-video");
-const captureButton = document.getElementById('capture-button');
 
 const width = 1200;
 let height = 0;

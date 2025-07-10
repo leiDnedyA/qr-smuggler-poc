@@ -2,17 +2,50 @@ import jabcode from './jabcode/jabcode.js'
 import video from './video.js';
 
 const MAX_BARCODE_TEXT_LENGTH = 400;
-const DELAY_MS = 40;
+const DELAY_MS = 8;
+const WEB_WORKER_COUNT = 8;
 
-const startButton = document.getElementById('start-button');
+const sendButton = document.getElementById('send-button');
+const readButton = document.getElementById('read-button')
 const recvImage = document.getElementById('recv-image');
 const dataUrlElement = document.getElementById('data-url-text');
+const progressElement = document.getElementById('percent');
 
 const readBuffer = {
   buffer: null,
   indicatorBuffer: null,
   len: -1
 }
+
+window.readBuffer = readBuffer;
+
+if (!window.Worker) {
+  alert("Browser too old, no workers!!!");
+  throw new Error("Browser outdated.");
+}
+
+let currWorkerIndex = 0;
+const workerCallback = ({ data: content }) => {
+  if (!content) return;
+  if (content.startsWith('noop')) {
+    console.log('noop');
+    return;
+  }
+  try {
+    const data = JSON.parse(content);
+    loadData(data);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+const workers = [];
+for (let i = 0; i < WEB_WORKER_COUNT; i++) {
+  const worker = new Worker("src/worker.js", { type: 'module' });
+  worker.onmessage = workerCallback;
+  workers.push(worker);
+}
+
 
 function loadData(data) {
   console.log(data);
@@ -25,9 +58,16 @@ function loadData(data) {
     }
     readBuffer.len = data.len;
   }
+  // if (readBuffer.indicatorBuffer[data.i]) return;
   readBuffer.buffer[data.i] = data.chunk;
   readBuffer.indicatorBuffer[data.i] = 1;
-  if (readBuffer.indicatorBuffer.every(element => element === 1)) {
+  const percent = readBuffer.indicatorBuffer.reduce((accum, curr) => {
+    return accum + curr;
+  }, 0) / readBuffer.len;
+  const percentText = `${Math.floor(percent * 100)}%`
+  progressElement.innerText = percentText;
+  console.log(percent);
+  if (percent === 1) {
     console.log('loading full data')
     let dataUrl = "";
     for (let chunk of readBuffer.buffer) {
@@ -37,22 +77,14 @@ function loadData(data) {
   }
 }
 
-video.init();
-video.captureOnInterval(async (imageBlob) => {
-  const content = await jabcode.readImage(imageBlob);
-  if (!content) return;
-  if (content.startsWith('noop')) {
-    console.log('noop');
-    return;
-  }
-  try {
-    const data = JSON.parse(content);
-    loadData(data);
-  } catch (e) {
-    console.error(e);
-  }
-  URL.revokeObjectURL(imageBlob);
-}, 5);
+readButton.onclick = () => {
+  video.init();
+  video.captureOnInterval(async (imageBlob) => {
+    const worker = workers[currWorkerIndex];
+    worker.postMessage(imageBlob);
+    currWorkerIndex = (currWorkerIndex + 1) % WEB_WORKER_COUNT;
+  }, 1);
+}
 
 async function compressImage(file, quality = 0.7) {
   return new Promise((resolve) => {
@@ -79,17 +111,24 @@ async function compressImage(file, quality = 0.7) {
   });
 }
 
+const jabcodeCache = {}
 async function setJabcode(dataString) {
+  if (jabcodeCache.hasOwnProperty(dataString)) {
+    const blobUrl = jabcodeCache[dataString];
+    recvImage.src = blobUrl;
+    return;
+  }
   const pngBlob = await jabcode.createEncoding(dataString);
   const blobUrl = URL.createObjectURL(pngBlob);
+  jabcodeCache[dataString] = blobUrl;
   recvImage.src = blobUrl;
 }
 
-async function sendTextViaJabcode(text) {
+function sendTextViaJabcode(text) {
   let i = 0;
   let count = 0;
-  let total = Math.floor(text.length / MAX_BARCODE_TEXT_LENGTH);
-  while (true) {
+  let total = Math.ceil(text.length / MAX_BARCODE_TEXT_LENGTH);
+  const animation = () => {
     const start = i;
     const end = i + MAX_BARCODE_TEXT_LENGTH;
 
@@ -110,12 +149,13 @@ async function sendTextViaJabcode(text) {
     i += MAX_BARCODE_TEXT_LENGTH;
     count++;
 
-    await new Promise(res => setTimeout(() => res(), DELAY_MS));
     if (i >= text.length) {
       i = 0;
       count = 0;
     }
+    requestAnimationFrame(animation);
   }
+  animation();
 }
 
 const fileInput = document.getElementById("file-input");
@@ -129,7 +169,8 @@ fileInput.addEventListener("change", async (event) => {
       dataUrlElement.value = dataURL;
       console.log(dataURL);
       // setJabcode("noop" + ("0" * 100));
-      startButton.onclick = () => { sendTextViaJabcode(dataURL); };
+      console.log(sendButton)
+      sendButton.onclick = () => { sendTextViaJabcode(dataURL); };
     } catch (error) {
       console.error("Error converting file to Base64:", error);
     }
