@@ -16,9 +16,11 @@ function dataURItoBlob(dataURI) {
 const video = document.getElementById("camera-video");
 const captureButton = document.getElementById('capture-button');
 
-const width = 500;
+const width = 1200;
 let height = 0;
 let streaming = false;
+
+let interval = null;
 
 function takePicture() {
   const canvas = document.createElement('canvas');
@@ -36,7 +38,9 @@ function takePicture() {
 }
 
 const Video = {
-  init: (handleCaptureImage) => {
+  handleCaptureImage: null,
+  interval: null,
+  init: function() {
 
     navigator.mediaDevices
       .getUserMedia({ video: true, audio: false })
@@ -61,15 +65,18 @@ const Video = {
       },
       false,
     );
-
-    captureButton.addEventListener(
-      "click",
-      (ev) => {
-        handleCaptureImage(takePicture());
-        ev.preventDefault();
-      },
-      false,
-    );
+  },
+  captureOnInterval: function(captureCallback, msDelay) {
+    this.handleCaptureImage = captureCallback;
+    this.interval = setInterval(() => { if (streaming) this.handleCaptureImage(takePicture()) }, msDelay);
+  },
+  clearInterval: function() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+    } else {
+      console.warn('Called `video.clearInterval` without a running interval.');
+    }
   }
 };
 

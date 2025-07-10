@@ -1,20 +1,52 @@
-import Video from './video.js';
+import jabcode from './jabcode/jabcode.js'
+import video from './video.js';
 
-Video.init(console.log);
-
-const MAX_QR_TEXT_LENGTH = 82;
+const MAX_BARCODE_TEXT_LENGTH = 300;
 const DELAY_MS = 200;
-const qrCode = new QRCode(document.getElementById("qrcode"));
 
 const startButton = document.getElementById('start-button');
 const recvImage = document.getElementById('recv-image');
 const dataUrlElement = document.getElementById('data-url-text');
 
-const readData = {
+const readBuffer = {
   buffer: null,
   i: 0,
   len: -1
 }
+
+function loadData(data) {
+  if (!readBuffer.buffer) {
+    readBuffer.buffer = new Array(data.len)
+    buffer.len = data.len;
+    buffer.i = data.i;
+  }
+  readBuffer.buffer[data.i] = data.chunk;
+  console.log('loading full data')
+  let dataUrl = "";
+  for (let chunk of readBuffer.buffer) {
+    dataUrl += chunk;
+  }
+  recvImage.src = dataUrl;
+  if (readBuffer.buffer.every(element => !!element) || data.i === data.len - 1) {
+  }
+}
+
+video.init();
+video.captureOnInterval(async (imageBlob) => {
+  const content = await jabcode.readImage(imageBlob);
+  if (!content) return;
+  if (content.startsWith('noop')) {
+    console.log('noop');
+    return;
+  }
+  try {
+    const data = JSON.parse(content);
+    console.log(data);
+    loadData(data);
+  } catch (e) {
+    console.error(e);
+  }
+}, DELAY_MS);
 
 async function compressImage(file, quality = 0.7) {
   return new Promise((resolve) => {
@@ -41,26 +73,35 @@ async function compressImage(file, quality = 0.7) {
   });
 }
 
-async function sendTextViaQR(text) {
+async function setJabcode(dataString) {
+  const pngBlob = await jabcode.createEncoding(dataString);
+  const blobUrl = URL.createObjectURL(pngBlob);
+  recvImage.src = blobUrl;
+}
+
+async function sendTextViaJabcode(text) {
   let i = 0;
   let count = 0;
-  let total = Math.floor(text.length / MAX_QR_TEXT_LENGTH);
+  let total = Math.floor(text.length / MAX_BARCODE_TEXT_LENGTH);
   while (true) {
     const start = i;
-    const end = i + MAX_QR_TEXT_LENGTH;
+    const end = i + MAX_BARCODE_TEXT_LENGTH;
 
     const chunk = text.length < end
       ? text.slice(start)
       : text.slice(start, end);
 
-    qrCode.clear();
-    qrCode.makeCode(JSON.stringify({
+    const content = {
       'i': count,
       'len': total,
       chunk
-    }));
+    }
 
-    i += MAX_QR_TEXT_LENGTH;
+    // console.log(content);
+
+    setJabcode(JSON.stringify(content));
+
+    i += MAX_BARCODE_TEXT_LENGTH;
     count++;
 
     await new Promise(res => setTimeout(() => res(), DELAY_MS));
@@ -69,15 +110,6 @@ async function sendTextViaQR(text) {
       count = 0;
     }
   }
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
 }
 
 const fileInput = document.getElementById("file-input");
@@ -90,8 +122,8 @@ fileInput.addEventListener("change", async (event) => {
       recvImage.src = dataURL;
       dataUrlElement.value = dataURL;
       console.log(dataURL);
-      qrCode.makeCode("noop" + ("0" * 100));
-      startButton.onclick = () => { sendTextViaQR(dataURL); };
+      // setJabcode("noop" + ("0" * 100));
+      startButton.onclick = () => { sendTextViaJabcode(dataURL); };
     } catch (error) {
       console.error("Error converting file to Base64:", error);
     }
