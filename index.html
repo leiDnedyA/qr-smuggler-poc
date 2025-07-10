@@ -12,17 +12,21 @@
   </style>
   </head>
   <body>
-    <p id="percent">0%</p>
-    <video id="camera-video"></video>
+    <div id="button-container">
+      <button id="read-button" style="font-size: 3em;">Read</button>
+      <button id="send-button" style="font-size: 3em;">Send</button>
+    </div>
+    <div id="read-container" style="display: none;">
+      <p id="percent">0%</p>
+      <video id="camera-video"></video>
+    </div>
 
-    <script src="./davidshimjs-qrcodejs-04f46c6/qrcode.js"></script>
+    <div id="send-container" style="font-size: 3em;">
+      <input type="file" id="file-input">
+      <textarea id="data-url-text"></textarea>
+    </div>
+
+    <img width="500" height="500" id="recv-image" style="padding: 10px;">
     <script type="module" src="./src/index.js"></script>
-    <script type="module" src="./src/jabcode-test.js"></script>
-    <input type="file" id="file-input">
-    <button id="read-button" style="font-size: 5em;">Read</button>
-    <button id="send-button" style="font-size: 5em;">Send</button>
-
-    <img width="500" height="500" id="recv-image">
-    <textarea id="data-url-text"></textarea>
   </body>
 </html>

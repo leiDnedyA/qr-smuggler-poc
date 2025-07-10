@@ -9,6 +9,9 @@ const readButton = document.getElementById('read-button')
 const recvImage = document.getElementById('recv-image');
 const dataUrlElement = document.getElementById('data-url-text');
 const progressElement = document.getElementById('percent');
+const readContainer = document.getElementById('read-container');
+const sendContainer = document.getElementById('send-container');
+const buttonContainer = document.getElementById('button-container');
 
 const readBuffer = {
   buffer: null,
@@ -73,12 +76,18 @@ function loadData(data) {
       dataUrl += chunk;
     }
     recvImage.src = dataUrl;
+    video.clearInterval();
+    readContainer.style.display = 'none';
+    buttonContainer.style.display = 'none';
   }
 }
 
 readButton.onclick = () => {
+  readContainer.style.display = 'block';
+  sendContainer.style.display = 'none';
+  buttonContainer.style.display = 'none';
   video.init();
-  video.captureOnInterval(async (imageBlob) => {
+  video.captureOnInterval((imageBlob) => {
     const worker = workers[currWorkerIndex];
     worker.postMessage(imageBlob);
     currWorkerIndex = (currWorkerIndex + 1) % WEB_WORKER_COUNT;
@@ -163,7 +172,7 @@ fileInput.addEventListener("change", async (event) => {
   if (file && file.type.startsWith("image/")) {
     try {
       // const dataURL = await fileToBase64(compressedFile);
-      const dataURL = await compressImage(file, .1);
+      const dataURL = await compressImage(file, .3);
       recvImage.src = dataURL;
       dataUrlElement.value = dataURL;
       console.log(dataURL);

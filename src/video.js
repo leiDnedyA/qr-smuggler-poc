@@ -70,6 +70,7 @@ const Video = {
     this.interval = setInterval(() => { if (streaming) this.handleCaptureImage(takePicture()) }, msDelay);
   },
   clearInterval: function() {
+    console.log('CLEARING INTERVAL', this.interval)
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
