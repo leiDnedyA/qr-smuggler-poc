@@ -79,6 +79,7 @@ function loadData(data) {
     video.clearInterval();
     readContainer.style.display = 'none';
     buttonContainer.style.display = 'none';
+    adjustImageHeight();
   }
 }
 
@@ -166,6 +167,12 @@ function sendTextViaJabcode(text) {
   animation();
 }
 
+const adjustImageHeight = () => {
+  let width = Math.min(recvImage.clientWidth, 500);
+  recvImage.style.width = `${width}px`
+  recvImage.style.height = `${width}px`;
+}
+
 const fileInput = document.getElementById("file-input");
 fileInput.addEventListener("change", async (event) => {
   const file = event.target.files[0];
@@ -173,6 +180,7 @@ fileInput.addEventListener("change", async (event) => {
     try {
       // const dataURL = await fileToBase64(compressedFile);
       const dataURL = await compressImage(file, .3);
+      adjustImageHeight();
       recvImage.src = dataURL;
       dataUrlElement.value = dataURL;
       console.log(dataURL);
