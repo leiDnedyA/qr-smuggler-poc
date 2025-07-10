@@ -9,6 +9,16 @@
       background: black;
       color: white;
     }
+    .player:before {
+      content: '';
+      position: absolute;
+      border: 1px solid red;
+      border-radius: 5px;
+      top: 180px;
+      left: 180px;
+      width: 550px;
+      height: 550px;
+    }
   </style>
   </head>
   <body>
@@ -18,7 +28,9 @@
     </div>
     <div id="read-container" style="display: none;">
       <p id="percent">0%</p>
-      <video id="camera-video"></video>
+      <div class="player">
+        <video id="camera-video"></video>
+      </div>
     </div>
 
     <div id="send-container" style="font-size: 3em;">
