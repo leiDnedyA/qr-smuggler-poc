@@ -1,6 +1,5 @@
 import wasmBindings from './build/libjabcode.js';
 
-
 const FS = wasmBindings.FS;
 const filename = 'image.png';
 

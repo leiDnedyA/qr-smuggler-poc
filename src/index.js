@@ -1,7 +1,7 @@
 import jabcode from './jabcode/jabcode.js'
 import video from './video.js';
 
-const MAX_BARCODE_TEXT_LENGTH = 300;
+const MAX_BARCODE_TEXT_LENGTH = 80;
 const WEB_WORKER_COUNT = 12;
 
 const sendButton = document.getElementById('send-button');
@@ -137,7 +137,7 @@ function sendTextViaJabcode(text) {
   let i = 0;
   let count = 0;
   let total = Math.ceil(text.length / MAX_BARCODE_TEXT_LENGTH);
-  const animation = () => {
+  const animation = async () => {
     const start = i;
     const end = i + MAX_BARCODE_TEXT_LENGTH;
 
@@ -162,7 +162,10 @@ function sendTextViaJabcode(text) {
       i = 0;
       count = 0;
     }
-    requestAnimationFrame(animation);
+    await new Promise(res => {
+      setTimeout(() => { res() }, 150);
+    })
+    animation();
   }
   animation();
 }
